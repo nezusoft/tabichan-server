@@ -1,3 +1,3 @@
-module github.com/cal1co/tabichan-server
+module github.com/tabichanorg/tabichan-server
 
 go 1.23.0

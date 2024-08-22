@@ -4,7 +4,7 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/cal1co/tabichan-server/internal/healthcheck"
+	"github.com/tabichanorg/tabichan-server/internal/healthcheck"
 )
 
 func main() {
