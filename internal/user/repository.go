@@ -1,29 +1,59 @@
 package user
 
 import (
-	"database/sql"
-	"errors"
+	"context"
+	"fmt"
+
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/feature/dynamodb/attributevalue"
+	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
+	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 )
 
-type Repository struct {
-	DB *sql.DB
+type UserRepository struct {
+	Client *dynamodb.Client
 }
 
-func NewRepository(db *sql.DB) *Repository {
-	return &Repository{DB: db}
-}
-
-func (r *Repository) CreateUser(user *User) error {
-	query := "INSERT INTO users (username, password, email) VALUES ($1, $2, $3) RETURNING id"
-	return r.DB.QueryRow(query, user.Username, user.Password, user.Email).Scan(&user.ID)
-}
-
-func (r *Repository) GetUserByUsername(username string) (*User, error) {
-	query := "SELECT id, username, password, email FROM users WHERE username=$1"
-	user := &User{}
-	err := r.DB.QueryRow(query, username).Scan(&user.ID, &user.Username, &user.Password, &user.Email)
-	if err == sql.ErrNoRows {
-		return nil, errors.New("user not found")
+func (r *UserRepository) CreateUser(user User) error {
+	input := &dynamodb.PutItemInput{
+		TableName: aws.String("Users"),
+		Item: map[string]types.AttributeValue{
+			"Username":      &types.AttributeValueMemberS{Value: user.Username},
+			"Password":      &types.AttributeValueMemberS{Value: user.Password},
+			"Email":         &types.AttributeValueMemberS{Value: user.Email},
+			"OAuthProvider": &types.AttributeValueMemberS{Value: user.OAuthProvider},
+			"UserID":        &types.AttributeValueMemberS{Value: user.ID},
+		},
 	}
-	return user, err
+
+	_, err := r.Client.PutItem(context.TODO(), input)
+	return err
+}
+
+func (r *UserRepository) GetUserByUsername(username string) (*User, error) {
+	input := &dynamodb.QueryInput{
+		TableName:              aws.String("Users"),
+		IndexName:              aws.String("UsernameIndex"),
+		KeyConditionExpression: aws.String("Username = :username"),
+		ExpressionAttributeValues: map[string]types.AttributeValue{
+			":username": &types.AttributeValueMemberS{Value: username},
+		},
+	}
+
+	result, err := r.Client.Query(context.TODO(), input)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(result.Items) == 0 {
+		return nil, fmt.Errorf("user not found")
+	}
+
+	var user User
+	err = attributevalue.UnmarshalMap(result.Items[0], &user)
+	if err != nil {
+		return nil, err
+	}
+
+	return &user, nil
 }

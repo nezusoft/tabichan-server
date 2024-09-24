@@ -1,23 +1,34 @@
 package app
 
 import (
-	"github.com/tabichanorg/tabichan-server/internal/config"
+	"context"
+	"fmt"
+	"log"
+
+	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
+	"github.com/joho/godotenv"
+	"github.com/tabichanorg/tabichan-server/internal/db"
 	"github.com/tabichanorg/tabichan-server/internal/server"
 )
 
 func InitializeApp() (*server.Server, error) {
-	cfg := config.LoadConfig()
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatalf("Error loading .env file: %v", err)
+	}
 
-	// postgresDB, err := db.NewPostgresDB(cfg.DBUser, cfg.DBPassword, cfg.DBName, cfg.DBHost, cfg.DBPort)
-	// if err != nil {
-	// 	return nil, err
-	// }
-	// defer postgresDB.Close()
+	db.InitDynamoDB()
+	verifyDynamoDBConnection(db.DynamoClient)
 
-	// userRepo := user.NewRepository(postgresDB.Conn)
-	// userService := user.NewService(userRepo)
-
-	srv := server.NewServer(cfg.HTTPPort)
+	srv := server.NewServer("localhost:8080")
 
 	return srv, nil
+}
+
+func verifyDynamoDBConnection(client *dynamodb.Client) {
+	result, err := client.ListTables(context.TODO(), &dynamodb.ListTablesInput{})
+	if err != nil {
+		log.Fatalf("Failed to connect to DynamoDB: %v", err)
+	}
+	fmt.Printf("Successfully connected to DynamoDB. Tables: %v\n", result.TableNames)
 }

@@ -5,57 +5,41 @@ import (
 	"net/http"
 )
 
-type Handler struct {
-	Service *Service
+type UserHandler struct {
+	Service *UserService
 }
 
-func NewHandler(service *Service) *Handler {
-	return &Handler{Service: service}
-}
-
-func (h *Handler) ServeHTTP(http.ResponseWriter, *http.Request) {
-	panic("unimplemented")
-}
-
-func (h *Handler) SignupHandler(w http.ResponseWriter, r *http.Request) {
-	var req struct {
-		Username string `json:"username"`
-		Password string `json:"password"`
-		Email    string `json:"email"`
-	}
-
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+func (h *UserHandler) Signup(w http.ResponseWriter, r *http.Request) {
+	var newUser User
+	if err := json.NewDecoder(r.Body).Decode(&newUser); err != nil {
 		http.Error(w, "Invalid request", http.StatusBadRequest)
 		return
 	}
 
-	user, err := h.Service.Signup(req.Username, req.Password, req.Email)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+	if err := h.Service.Signup(newUser); err != nil {
+		http.Error(w, err.Error(), http.StatusConflict)
 		return
 	}
 
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(user)
+	w.Write([]byte("User created successfully"))
 }
 
-func (h *Handler) LoginHandler(w http.ResponseWriter, r *http.Request) {
-	var req struct {
+func (h *UserHandler) Login(w http.ResponseWriter, r *http.Request) {
+	var loginRequest struct {
 		Username string `json:"username"`
 		Password string `json:"password"`
 	}
-
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+	if err := json.NewDecoder(r.Body).Decode(&loginRequest); err != nil {
 		http.Error(w, "Invalid request", http.StatusBadRequest)
 		return
 	}
 
-	user, err := h.Service.Login(req.Username, req.Password)
+	token, err := h.Service.Login(loginRequest.Username, loginRequest.Password)
 	if err != nil {
-		http.Error(w, "Invalid credentials", http.StatusUnauthorized)
+		http.Error(w, err.Error(), http.StatusUnauthorized)
 		return
 	}
 
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(user)
+	json.NewEncoder(w).Encode(map[string]string{"token": token})
 }
