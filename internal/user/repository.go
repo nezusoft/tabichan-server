@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/feature/dynamodb/attributevalue"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
+	"github.com/tabichanorg/tabichan-server/internal/utils"
 )
 
 type UserRepository struct {
@@ -30,17 +31,31 @@ func (r *UserRepository) CreateUser(user User) error {
 	return err
 }
 
+func (r *UserRepository) GetUserByUsernameOrEmail(usernameOrEmailInput string) (*User, error) {
+	if utils.IsEmail(usernameOrEmailInput) {
+		return r.GetUserByEmail(usernameOrEmailInput)
+	}
+	return r.GetUserByUsername(usernameOrEmailInput)
+}
+
 func (r *UserRepository) GetUserByUsername(username string) (*User, error) {
-	input := &dynamodb.QueryInput{
+	return r.FetchUserInfo(username, "UsernameIndex", "Username = :username", ":username")
+}
+
+func (r *UserRepository) GetUserByEmail(email string) (*User, error) {
+	return r.FetchUserInfo(email, "EmailIndex", "Email = :email", ":email")
+}
+
+func (r *UserRepository) FetchUserInfo(usernameOrEmailInput, indexName, keyConditionExpression, keyAttribute string) (*User, error) {
+	queryInput := &dynamodb.QueryInput{
 		TableName:              aws.String("Users"),
-		IndexName:              aws.String("UsernameIndex"),
-		KeyConditionExpression: aws.String("Username = :username"),
+		IndexName:              aws.String(indexName),
+		KeyConditionExpression: aws.String(keyConditionExpression),
 		ExpressionAttributeValues: map[string]types.AttributeValue{
-			":username": &types.AttributeValueMemberS{Value: username},
+			keyAttribute: &types.AttributeValueMemberS{Value: usernameOrEmailInput},
 		},
 	}
-
-	result, err := r.Client.Query(context.TODO(), input)
+	result, err := r.Client.Query(context.TODO(), queryInput)
 	if err != nil {
 		return nil, err
 	}

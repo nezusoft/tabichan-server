@@ -9,7 +9,6 @@ import (
 )
 
 func SetupRoutes(mux *http.ServeMux) *http.ServeMux {
-
 	mux.HandleFunc("/healthcheck", healthcheck.HealthCheck)
 
 	userHandler := initUserHandler()

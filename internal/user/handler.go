@@ -40,15 +40,15 @@ func (h *UserHandler) Signup(w http.ResponseWriter, r *http.Request) {
 
 func (h *UserHandler) Login(w http.ResponseWriter, r *http.Request) {
 	var loginRequest struct {
-		Username string `json:"username"`
-		Password string `json:"password"`
+		UsernameOrEmail string `json:"UsernameOrEmail"`
+		Password        string `json:"password"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&loginRequest); err != nil {
 		http.Error(w, "Invalid request", http.StatusBadRequest)
 		return
 	}
 
-	token, err := h.Service.Login(loginRequest.Username, loginRequest.Password)
+	token, err := h.Service.Login(loginRequest.UsernameOrEmail, loginRequest.Password)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusUnauthorized)
 		return

@@ -2,7 +2,6 @@ package app
 
 import (
 	"context"
-	"fmt"
 	"log"
 
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
@@ -30,5 +29,5 @@ func verifyDynamoDBConnection(client *dynamodb.Client) {
 	if err != nil {
 		log.Fatalf("Failed to connect to DynamoDB: %v", err)
 	}
-	fmt.Printf("Successfully connected to DynamoDB. Tables: %v\n", result.TableNames)
+	log.Printf("Successfully connected to DynamoDB. Tables: %v\n", result.TableNames)
 }
