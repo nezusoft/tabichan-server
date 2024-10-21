@@ -49,6 +49,15 @@ func (s *UserService) Login(usernameOrEmail, password string) (string, error) {
 	return token, nil
 }
 
+func (s *UserService) GetUser(userId string) (*UserDetails, error) {
+
+	user, err := s.Repo.GetUserDetailsByID(userId)
+	if err != nil {
+		return user, err
+	}
+	return user, nil
+}
+
 func (s *UserService) checkUsernameOrEmailInUse(email, username string) error {
 	usernameExists, err := s.Repo.GetUserByUsername(username)
 	if err != nil && err.Error() != "user not found" {

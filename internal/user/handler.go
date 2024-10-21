@@ -57,6 +57,16 @@ func (h *UserHandler) Login(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(map[string]string{"token": token})
 }
 
+func (h *UserHandler) GetUser(w http.ResponseWriter, r *http.Request) {
+	id := ""
+	userDetails, err := h.Service.GetUser(id)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusUnauthorized)
+		return
+	}
+	json.NewEncoder(w).Encode(map[string]*UserDetails{"details": userDetails})
+}
+
 func validateUsername(username string) error {
 	for _, char := range username {
 		if unicode.IsSpace(char) {

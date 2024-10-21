@@ -7,3 +7,10 @@ type User struct {
 	OAuthProvider string `json:"oauth"`
 	ID            string `json:"userId"`
 }
+
+type UserDetails struct {
+	Username         string `json:"username"`
+	DisplayName      string `json:"displayName"`
+	UserID           string `json:"userId"`
+	ProfileImageData string `json:"profileImageData"`
+}

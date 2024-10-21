@@ -72,3 +72,34 @@ func (r *UserRepository) FetchUserInfo(usernameOrEmailInput, indexName, keyCondi
 
 	return &user, nil
 }
+
+func (r *UserRepository) GetUserDetailsByID(id string) (*UserDetails, error) {
+	return r.FetchUserDetails(id, "UserIDIndex", "UserID = :userid", ":userid")
+}
+
+func (r *UserRepository) FetchUserDetails(id, indexName, keyConditionExpression, keyAttribute string) (*UserDetails, error) {
+	queryInput := &dynamodb.QueryInput{
+		TableName:              aws.String("Users"),
+		IndexName:              aws.String(indexName),
+		KeyConditionExpression: aws.String(keyConditionExpression),
+		ExpressionAttributeValues: map[string]types.AttributeValue{
+			keyAttribute: &types.AttributeValueMemberS{Value: id},
+		},
+	}
+	result, err := r.Client.Query(context.TODO(), queryInput)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(result.Items) == 0 {
+		return nil, fmt.Errorf("user not found")
+	}
+
+	var user UserDetails
+	err = attributevalue.UnmarshalMap(result.Items[0], &user)
+	if err != nil {
+		return nil, err
+	}
+
+	return &user, nil
+}

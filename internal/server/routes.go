@@ -14,6 +14,7 @@ func SetupRoutes(mux *http.ServeMux) *http.ServeMux {
 	userHandler := initUserHandler()
 	mux.HandleFunc("/signup", userHandler.Signup)
 	mux.HandleFunc("/login", userHandler.Login)
+	mux.HandleFunc("/user/details", userHandler.GetUser)
 
 	return mux
 }
