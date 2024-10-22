@@ -23,7 +23,7 @@ func (r *UserRepository) CreateUser(user UserLogin) error {
 			"Password":      &types.AttributeValueMemberS{Value: user.Password},
 			"Email":         &types.AttributeValueMemberS{Value: user.Email},
 			"OAuthProvider": &types.AttributeValueMemberS{Value: user.OAuthProvider},
-			"UserID":        &types.AttributeValueMemberS{Value: user.ID},
+			"UserID":        &types.AttributeValueMemberS{Value: user.UserID},
 		},
 	}
 
@@ -111,11 +111,38 @@ func (r *UserRepository) CreateSession(session *utils.Session) error {
 			"SessionID": &types.AttributeValueMemberS{Value: session.SessionID},
 			"UserID":    &types.AttributeValueMemberS{Value: session.UserID},
 			"Device":    &types.AttributeValueMemberS{Value: session.Device},
-			"CreatedAt": &types.AttributeValueMemberS{Value: session.CreatedAt.String()},
-			"ExpiresAt": &types.AttributeValueMemberS{Value: session.ExpiresAt.String()},
+			"CreatedAt": &types.AttributeValueMemberS{Value: session.CreatedAt},
+			"ExpiresAt": &types.AttributeValueMemberS{Value: session.ExpiresAt},
 		},
 	}
 
 	_, err := r.Client.PutItem(context.TODO(), input)
 	return err
+}
+
+func (r *UserRepository) FetchSession(sessionID string) (*utils.Session, error) {
+	queryInput := &dynamodb.QueryInput{
+		TableName:              aws.String("Sessions"),
+		IndexName:              aws.String("SessionIDIndex"),
+		KeyConditionExpression: aws.String("SessionID = :sessionID"),
+		ExpressionAttributeValues: map[string]types.AttributeValue{
+			":sessionID": &types.AttributeValueMemberS{Value: sessionID},
+		},
+	}
+	result, err := r.Client.Query(context.TODO(), queryInput)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(result.Items) == 0 {
+		return nil, fmt.Errorf("session not found")
+	}
+	fmt.Println(result.Items)
+	var session utils.Session
+	err = attributevalue.UnmarshalMap(result.Items[0], &session)
+	if err != nil {
+		return nil, err
+	}
+
+	return &session, nil
 }

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
+	"time"
 	"unicode"
 )
 
@@ -48,13 +49,24 @@ func (h *UserHandler) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	token, err := h.Service.Login(loginRequest.UsernameOrEmail, loginRequest.Password, r.Header.Get("User-Agent"))
+	response, err := h.Service.Login(loginRequest.UsernameOrEmail, loginRequest.Password, r.Header.Get("User-Agent"))
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusUnauthorized)
+		return
+	}
+	expiresAt, err := time.Parse(time.RFC3339, response.Session.ExpiresAt)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusUnauthorized)
 		return
 	}
 
-	json.NewEncoder(w).Encode(map[string]string{"token": token})
+	http.SetCookie(w, &http.Cookie{
+		Name:     "sessionID",
+		Value:    response.Session.SessionID,
+		Expires:  expiresAt,
+		HttpOnly: true,
+	})
+	json.NewEncoder(w).Encode(response)
 }
 
 func (h *UserHandler) GetUser(w http.ResponseWriter, r *http.Request) {
