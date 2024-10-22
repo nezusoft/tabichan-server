@@ -2,6 +2,7 @@ package user
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/tabichanorg/tabichan-server/internal/utils"
@@ -11,7 +12,7 @@ type UserService struct {
 	Repo *UserRepository
 }
 
-func (s *UserService) Signup(newUser User) error {
+func (s *UserService) Signup(newUser UserLogin) error {
 	if !utils.IsEmail(newUser.Email) {
 		return fmt.Errorf(`email "%s" is not valid`, newUser.Email)
 	}
@@ -31,7 +32,7 @@ func (s *UserService) Signup(newUser User) error {
 	return s.Repo.CreateUser(newUser)
 }
 
-func (s *UserService) Login(usernameOrEmail, password string) (string, error) {
+func (s *UserService) Login(usernameOrEmail, password, device string) (string, error) {
 	user, err := s.Repo.GetUserByUsernameOrEmail(usernameOrEmail)
 	if err != nil {
 		return "", err
@@ -39,6 +40,18 @@ func (s *UserService) Login(usernameOrEmail, password string) (string, error) {
 
 	if !utils.CheckPasswordHash(password, user.Password) {
 		return "", fmt.Errorf("invalid username or password")
+	}
+	session := &utils.Session{
+		SessionID: uuid.New().String(),
+		UserID:    user.ID,
+		ExpiresAt: time.Now().Add(5 * 24 * time.Hour),
+		CreatedAt: time.Now(),
+		Device:    device,
+	}
+
+	err = s.Repo.CreateSession(session)
+	if err != nil {
+		return "", fmt.Errorf("failed to create session: %v", err)
 	}
 
 	token, err := utils.GenerateJWT(user.Username)
@@ -49,7 +62,7 @@ func (s *UserService) Login(usernameOrEmail, password string) (string, error) {
 	return token, nil
 }
 
-func (s *UserService) GetUser(userId string) (*UserDetails, error) {
+func (s *UserService) GetUser(userId string) (*User, error) {
 
 	user, err := s.Repo.GetUserDetailsByID(userId)
 	if err != nil {

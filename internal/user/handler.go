@@ -13,7 +13,7 @@ type UserHandler struct {
 }
 
 func (h *UserHandler) Signup(w http.ResponseWriter, r *http.Request) {
-	var newUser User
+	var newUser UserLogin
 	if err := json.NewDecoder(r.Body).Decode(&newUser); err != nil {
 		http.Error(w, "Invalid request", http.StatusBadRequest)
 		return
@@ -48,7 +48,7 @@ func (h *UserHandler) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	token, err := h.Service.Login(loginRequest.UsernameOrEmail, loginRequest.Password)
+	token, err := h.Service.Login(loginRequest.UsernameOrEmail, loginRequest.Password, r.Header.Get("User-Agent"))
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusUnauthorized)
 		return
@@ -64,7 +64,7 @@ func (h *UserHandler) GetUser(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusUnauthorized)
 		return
 	}
-	json.NewEncoder(w).Encode(map[string]*UserDetails{"details": userDetails})
+	json.NewEncoder(w).Encode(map[string]*User{"details": userDetails})
 }
 
 func validateUsername(username string) error {
