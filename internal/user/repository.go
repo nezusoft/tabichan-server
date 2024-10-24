@@ -137,7 +137,7 @@ func (r *UserRepository) FetchSession(sessionID string) (*utils.Session, error) 
 	if len(result.Items) == 0 {
 		return nil, fmt.Errorf("session not found")
 	}
-	fmt.Println(result.Items)
+
 	var session utils.Session
 	err = attributevalue.UnmarshalMap(result.Items[0], &session)
 	if err != nil {

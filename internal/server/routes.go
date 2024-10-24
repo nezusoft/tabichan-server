@@ -17,7 +17,7 @@ func SetupRoutes(mux *http.ServeMux) *http.ServeMux {
 	userHandler := initUserHandler()
 	mux.HandleFunc("/signup", userHandler.Signup)
 	mux.HandleFunc("/login", userHandler.Login)
-	mux.HandleFunc("/user/details", middleware.SessionMiddleware(middlewareService)(http.HandlerFunc(userHandler.GetUser)))
+	mux.HandleFunc("/user/details", middlewareService.SessionMiddleware(userHandler.GetUser))
 
 	return mux
 }
@@ -30,5 +30,5 @@ func initUserHandler() *user.UserHandler {
 
 func initMiddleware() *middleware.MiddlewareService {
 	middlewareRepo := &middleware.MiddlewareRepository{Client: db.DynamoClient}
-	return middleware.NewMiddlewareService(middlewareRepo)
+	return &middleware.MiddlewareService{Repo: middlewareRepo}
 }

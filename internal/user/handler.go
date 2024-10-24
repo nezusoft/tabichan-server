@@ -88,8 +88,13 @@ func (h *UserHandler) Login(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *UserHandler) GetUser(w http.ResponseWriter, r *http.Request) {
-	id := ""
-	userDetails, err := h.Service.GetUser(id)
+	userID, ok := r.Context().Value("userID").(string)
+	if !ok {
+		http.Error(w, "User ID not found in context", http.StatusInternalServerError)
+		return
+	}
+
+	userDetails, err := h.Service.GetUser(userID)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusUnauthorized)
 		return
