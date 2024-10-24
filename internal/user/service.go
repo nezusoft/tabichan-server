@@ -12,62 +12,67 @@ type UserService struct {
 	Repo *UserRepository
 }
 
-func (s *UserService) Signup(newUser UserLogin) error {
+func (s *UserService) Signup(newUser UserLogin, device string) (*LoginRequestResponse, error) {
 	if !utils.IsEmail(newUser.Email) {
-		return fmt.Errorf(`email "%s" is not valid`, newUser.Email)
+		return &LoginRequestResponse{}, fmt.Errorf(`email "%s" is not valid`, newUser.Email)
 	}
 
 	if err := s.checkUsernameOrEmailInUse(newUser.Email, newUser.Username); err != nil {
-		return err
+		return &LoginRequestResponse{}, err
 	}
 
 	hashedPassword, err := utils.HashPassword(newUser.Password)
 	if err != nil {
-		return fmt.Errorf("error hashing password: %v", err)
+		return &LoginRequestResponse{}, fmt.Errorf("error hashing password: %v", err)
 	}
 
 	newUser.Password = hashedPassword
 	newUser.UserID = generateID()
 
-	return s.Repo.CreateUser(newUser)
+	expiresAt := time.Now().Add(24 * time.Hour)
+
+	session, err := s.createNewSession(expiresAt, newUser.UserID, device)
+	if err != nil {
+		return &LoginRequestResponse{}, err
+	}
+
+	token, err := utils.GenerateJWT(newUser.Username)
+	if err != nil {
+		return &LoginRequestResponse{}, fmt.Errorf("failed to generate token: %v", err)
+	}
+
+	return &LoginRequestResponse{Token: token, Session: session}, s.Repo.CreateUser(newUser)
 }
 
-func (s *UserService) Login(usernameOrEmail, password, device string) (LoginRequestResponse, error) {
+func (s *UserService) Login(usernameOrEmail, password, device string, rememberMeSelected bool) (*LoginRequestResponse, error) {
 	user, err := s.Repo.GetUserByUsernameOrEmail(usernameOrEmail)
 	if err != nil {
-		return LoginRequestResponse{}, err
+		return &LoginRequestResponse{}, err
 	}
 
 	if !utils.CheckPasswordHash(password, user.Password) {
-		return LoginRequestResponse{}, fmt.Errorf("invalid username or password")
+		return &LoginRequestResponse{}, fmt.Errorf("invalid username or password")
 	}
 
-	session, err := s.Repo.FetchSession("84b4ebee-0f22-485d-adb4-ad0597f1c183")
+	var expiresAt time.Time
+	if rememberMeSelected {
+		expiresAt = time.Now().Add(30 * 24 * time.Hour)
+	} else {
+		expiresAt = time.Now().Add(24 * time.Hour)
+	}
+
+	session, err := s.createNewSession(expiresAt, user.UserID, device)
 	if err != nil {
-
-		return LoginRequestResponse{}, fmt.Errorf("failed to fetch session: %v", err)
-	}
-	if session == nil {
-		session = &utils.Session{
-			SessionID: uuid.New().String(),
-			UserID:    user.UserID,
-			ExpiresAt: time.Now().Add(5 * 24 * time.Hour).Format(time.RFC3339),
-			CreatedAt: time.Now().Format(time.RFC3339),
-			Device:    device,
-		}
-
-		err = s.Repo.CreateSession(session)
-		if err != nil {
-			return LoginRequestResponse{}, fmt.Errorf("failed to create session: %v", err)
-		}
+		return &LoginRequestResponse{}, err
 	}
 
+	// TODO: incorporate before MVP completion
 	token, err := utils.GenerateJWT(user.Username)
 	if err != nil {
-		return LoginRequestResponse{}, fmt.Errorf("failed to generate token: %v", err)
+		return &LoginRequestResponse{}, fmt.Errorf("failed to generate token: %v", err)
 	}
 
-	return LoginRequestResponse{Token: token, Session: session}, nil
+	return &LoginRequestResponse{Token: token, Session: session}, nil
 }
 
 func (s *UserService) GetUser(userId string) (*User, error) {
@@ -77,6 +82,23 @@ func (s *UserService) GetUser(userId string) (*User, error) {
 		return user, err
 	}
 	return user, nil
+}
+
+func (s *UserService) createNewSession(expiresAt time.Time, userID string, device string) (*utils.Session, error) {
+	session := &utils.Session{
+		SessionID: uuid.New().String(),
+		UserID:    userID,
+		ExpiresAt: expiresAt.Format(time.RFC3339),
+		CreatedAt: time.Now().Format(time.RFC3339),
+		Device:    device,
+	}
+
+	err := s.Repo.CreateSession(session)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create session: %v", err)
+	}
+
+	return session, nil
 }
 
 func (s *UserService) checkUsernameOrEmailInUse(email, username string) error {

@@ -30,28 +30,9 @@ func (h *UserHandler) Signup(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := h.Service.Signup(newUser); err != nil {
-		http.Error(w, err.Error(), http.StatusConflict)
-		return
-	}
-
-	w.WriteHeader(http.StatusCreated)
-	w.Write([]byte("User created successfully"))
-}
-
-func (h *UserHandler) Login(w http.ResponseWriter, r *http.Request) {
-	var loginRequest struct {
-		UsernameOrEmail string `json:"UsernameOrEmail"`
-		Password        string `json:"password"`
-	}
-	if err := json.NewDecoder(r.Body).Decode(&loginRequest); err != nil {
-		http.Error(w, "Invalid request", http.StatusBadRequest)
-		return
-	}
-
-	response, err := h.Service.Login(loginRequest.UsernameOrEmail, loginRequest.Password, r.Header.Get("User-Agent"))
+	response, err := h.Service.Signup(newUser, r.Header.Get("User-Agent"))
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusUnauthorized)
+		http.Error(w, err.Error(), http.StatusConflict)
 		return
 	}
 	expiresAt, err := time.Parse(time.RFC3339, response.Session.ExpiresAt)
@@ -65,7 +46,44 @@ func (h *UserHandler) Login(w http.ResponseWriter, r *http.Request) {
 		Value:    response.Session.SessionID,
 		Expires:  expiresAt,
 		HttpOnly: true,
+		// Secure:   true, // TODO: use Secure when hosting HTTPS
 	})
+
+	w.WriteHeader(http.StatusCreated)
+	json.NewEncoder(w).Encode(response)
+}
+
+func (h *UserHandler) Login(w http.ResponseWriter, r *http.Request) {
+	var loginRequest struct {
+		UsernameOrEmail string `json:"UsernameOrEmail"`
+		Password        string `json:"password"`
+		RememberMe      bool   `json:"RememberMe"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&loginRequest); err != nil {
+		http.Error(w, "Invalid request", http.StatusBadRequest)
+		return
+	}
+
+	response, err := h.Service.Login(loginRequest.UsernameOrEmail, loginRequest.Password, r.Header.Get("User-Agent"), loginRequest.RememberMe)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusUnauthorized)
+		return
+	}
+
+	expiresAt, err := time.Parse(time.RFC3339, response.Session.ExpiresAt)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusUnauthorized)
+		return
+	}
+
+	http.SetCookie(w, &http.Cookie{
+		Name:     "sessionID",
+		Value:    response.Session.SessionID,
+		Expires:  expiresAt,
+		HttpOnly: true,
+		// Secure:   true, // TODO: use Secure when hosting HTTPS
+	})
+
 	json.NewEncoder(w).Encode(response)
 }
 
