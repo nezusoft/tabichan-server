@@ -16,11 +16,11 @@ type UserLogin struct {
 
 type User struct {
 	Username         string    `json:"username"`
-	DisplayName      string    `json:"display_name"`
-	UserID           string    `json:"user_id"`
-	ProfileImageData string    `json:"profile_image_data"`
-	CreatedAt        time.Time `json:"created_at"`
-	LastLoginAt      time.Time `json:"last_login_at"`
+	DisplayName      string    `json:"displayName"`
+	UserID           string    `json:"userId"`
+	ProfileImageData string    `json:"profileImageData"`
+	CreatedAt        time.Time `json:"createdAt"`
+	LastLoginAt      time.Time `json:"lastLoginAt"`
 }
 
 type LoginRequestResponse struct {

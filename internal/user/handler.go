@@ -99,7 +99,7 @@ func (h *UserHandler) GetUser(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusUnauthorized)
 		return
 	}
-	json.NewEncoder(w).Encode(map[string]*User{"details": userDetails})
+	json.NewEncoder(w).Encode(userDetails)
 }
 
 func validateUsername(username string) error {
