@@ -5,6 +5,8 @@ import (
 	"log"
 	"net/http"
 	"time"
+
+	"github.com/gorilla/mux"
 )
 
 type Server struct {
@@ -13,7 +15,7 @@ type Server struct {
 }
 
 func NewServer(addr string) *Server {
-	mux := http.NewServeMux()
+	mux := mux.NewRouter()
 	SetupRoutes(mux)
 
 	return &Server{
