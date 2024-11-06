@@ -15,14 +15,14 @@ type Server struct {
 }
 
 func NewServer(addr string) *Server {
-	mux := mux.NewRouter()
-	SetupRoutes(mux)
+	router := mux.NewRouter()
+	SetupRoutes(router)
 
 	return &Server{
 		Addr: addr,
 		Server: &http.Server{
 			Addr:    addr,
-			Handler: corsHandler(mux),
+			Handler: corsHandler(router),
 		},
 	}
 }

@@ -11,7 +11,7 @@ type UserLogin struct {
 	Password      string `json:"password"`
 	Email         string `json:"email"`
 	OAuthProvider string `json:"oauth"`
-	UserID        string `json:"user_id"`
+	UserID        string `json:"userId"`
 }
 
 type User struct {

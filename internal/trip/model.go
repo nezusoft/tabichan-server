@@ -5,18 +5,19 @@ import (
 )
 
 type Trip struct {
-	UserID    string
-	StartDate time.Time
-	EndDate   time.Time
-	Title     string
-	ID        string
-	Completed bool
-	Draft     bool
-	PlanID    string
+	CreatedBy string    `json:"createdBy"`
+	StartDate time.Time `json:"startDate"`
+	EndDate   time.Time `json:"endDate"`
+	Title     string    `json:"title"`
+	ID        string    `json:"id"`
+	Completed bool      `json:"completed"`
+	Draft     bool      `json:"draft"`
+	PlanID    string    `json:"planId"`
 }
 
 type Plan struct {
-	TripId string
+	TripID string
+	PlanID string
 }
 
 type Itinerary struct {

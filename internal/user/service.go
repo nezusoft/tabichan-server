@@ -27,7 +27,7 @@ func (s *UserService) Signup(newUser UserLogin, device string) (*LoginRequestRes
 	}
 
 	newUser.Password = hashedPassword
-	newUser.UserID = generateID()
+	newUser.UserID = utils.GenerateID()
 
 	expiresAt := time.Now().Add(24 * time.Hour)
 
@@ -121,9 +121,4 @@ func (s *UserService) checkUsernameOrEmailInUse(email, username string) error {
 	}
 
 	return nil
-}
-
-func generateID() string {
-	id := uuid.New()
-	return id.String()
 }
