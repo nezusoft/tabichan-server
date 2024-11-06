@@ -48,7 +48,7 @@ func validateTripData(tripData *Trip) error {
 		return fmt.Errorf("start date must be before end date")
 	}
 
-	if !tripData.StartDate.Before(time.Now()) {
+	if tripData.StartDate.Before(time.Now().UTC()) {
 		return fmt.Errorf("start date must be in the future")
 	}
 
