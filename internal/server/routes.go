@@ -1,6 +1,7 @@
 package server
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/gorilla/mux"
@@ -10,8 +11,6 @@ import (
 	"github.com/tabichanorg/tabichan-server/internal/trip"
 	"github.com/tabichanorg/tabichan-server/internal/user"
 )
-
-var middlewareService = initMiddleware()
 
 func SetupRoutes(mux *mux.Router) *mux.Router {
 	mux.HandleFunc("/healthcheck", healthcheck.HealthCheck).Methods("GET")
@@ -55,23 +54,27 @@ func initTripRoutes(mux *mux.Router) {
 }
 
 func initUserHandler() *user.UserHandler {
+	fmt.Println("USER DB", db.DynamoClient)
 	userRepo := &user.UserRepository{Client: db.DynamoClient}
 	userService := &user.UserService{Repo: userRepo}
 	return &user.UserHandler{Service: userService}
 }
 
 func initTripHandler() *trip.TripHandler {
+	fmt.Println("TRIP DB", db.DynamoClient)
 	tripRepo := &trip.TripRepository{Client: db.DynamoClient}
 	tripService := &trip.TripService{Repo: tripRepo}
 	return &trip.TripHandler{Service: tripService}
 }
 
 func initMiddleware() *middleware.MiddlewareService {
+	fmt.Println("MIDDLEWARE DB", db.DynamoClient)
 	middlewareRepo := &middleware.MiddlewareRepository{Client: db.DynamoClient}
 	return &middleware.MiddlewareService{Repo: middlewareRepo}
 }
 
 func initRoute(mux *mux.Router, endpoint string, handlerFunc func(http.ResponseWriter, *http.Request), isSecureRoute bool, method string) {
+	middlewareService := initMiddleware()
 	if isSecureRoute {
 		mux.HandleFunc(endpoint, middlewareService.SessionMiddleware(handlerFunc)).Methods(method)
 		return
