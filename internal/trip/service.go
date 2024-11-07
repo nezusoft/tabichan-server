@@ -11,6 +11,33 @@ type TripService struct {
 	Repo *TripRepository
 }
 
+func (s *TripService) GetTrips(userID string) ([]*Trip, error) {
+	trips, err := s.Repo.GetTrips(userID)
+	if err != nil {
+		return []*Trip{}, fmt.Errorf(`error fetching trips for user with id %s: %w`, userID, err)
+	}
+
+	return trips, nil
+}
+
+func (s *TripService) GetTrip(tripID string) (*Trip, error) {
+	trip, err := s.Repo.GetTrip(tripID)
+	if err != nil {
+		return &Trip{}, fmt.Errorf(`error fetching trip with id %s: %s`, tripID, err)
+	}
+
+	return trip, nil
+}
+
+func (s *TripService) DeleteTrip(tripID string) error {
+	err := s.Repo.DeleteTrip(tripID)
+	if err != nil {
+		return fmt.Errorf(`error deleting trip with id %s: %s`, tripID, err)
+	}
+
+	return nil
+}
+
 func (s *TripService) CreateTrip(tripData *Trip) (*Trip, error) {
 
 	if err := validateTripData(tripData); err != nil {

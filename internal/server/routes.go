@@ -1,7 +1,6 @@
 package server
 
 import (
-	"fmt"
 	"net/http"
 
 	"github.com/gorilla/mux"
@@ -27,11 +26,11 @@ func SetupRoutes(mux *mux.Router) *mux.Router {
 
 func initTripRoutes(mux *mux.Router) {
 	tripHandler := initTripHandler()
-	// initRoute(mux, "/trips", tripHandler.GetTrips, true, "GET")
-	// initRoute(mux, "/trips/{tripID}", tripHandler.GetTrip, true, "GET")
+	initRoute(mux, "/trips", tripHandler.GetTrips, true, "GET")
+	initRoute(mux, "/trips/{tripID}", tripHandler.GetTrip, true, "GET")
 	initRoute(mux, "/trips", tripHandler.CreateTrip, true, "POST")
 	// initRoute(mux, "/trips/{tripID}", tripHandler.EditTrip, true, "PUT")
-	// initRoute(mux, "/trip/{tripID}", tripHandler.DeleteTrip, true, "DELETE")
+	initRoute(mux, "/trips/{tripID}", tripHandler.DeleteTrip, true, "DELETE")
 
 	// initRoute(mux, "/itineraries/{tripID}", tripHandler.GetItineraries, true, "GET")
 	// initRoute(mux, "/itineraries", tripHandler.CreateItinerary, true, "POST")
@@ -54,21 +53,18 @@ func initTripRoutes(mux *mux.Router) {
 }
 
 func initUserHandler() *user.UserHandler {
-	fmt.Println("USER DB", db.DynamoClient)
 	userRepo := &user.UserRepository{Client: db.DynamoClient}
 	userService := &user.UserService{Repo: userRepo}
 	return &user.UserHandler{Service: userService}
 }
 
 func initTripHandler() *trip.TripHandler {
-	fmt.Println("TRIP DB", db.DynamoClient)
 	tripRepo := &trip.TripRepository{Client: db.DynamoClient}
 	tripService := &trip.TripService{Repo: tripRepo}
 	return &trip.TripHandler{Service: tripService}
 }
 
 func initMiddleware() *middleware.MiddlewareService {
-	fmt.Println("MIDDLEWARE DB", db.DynamoClient)
 	middlewareRepo := &middleware.MiddlewareRepository{Client: db.DynamoClient}
 	return &middleware.MiddlewareService{Repo: middlewareRepo}
 }

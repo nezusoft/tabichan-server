@@ -3,39 +3,41 @@ package trip
 import (
 	"encoding/json"
 	"net/http"
+
+	"github.com/gorilla/mux"
 )
 
 type TripHandler struct {
 	Service *TripService
 }
 
-// func (h *TripHandler) GetTrips(w http.ResponseWriter, r *http.Request) {
-// 	userID, ok := r.Context().Value("userID").(string)
-// 	if !ok {
-// 		http.Error(w, "User ID not found in context", http.StatusInternalServerError)
-// 		return
-// 	}
+func (h *TripHandler) GetTrips(w http.ResponseWriter, r *http.Request) {
+	userID, ok := r.Context().Value("userID").(string)
+	if !ok {
+		http.Error(w, "User ID not found in context", http.StatusInternalServerError)
+		return
+	}
 
-// 	trips, err := h.Service.GetTrips(userID)
-// 	if err != nil {
-// 		http.Error(w, err.Error(), http.StatusInternalServerError)
-// 		return
-// 	}
+	trips, err := h.Service.GetTrips(userID)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 
-// 	json.NewEncoder(w).Encode(trips)
-// }
+	json.NewEncoder(w).Encode(trips)
+}
 
-// func (h *TripHandler) GetTrip(w http.ResponseWriter, r *http.Request) {
-// 	tripID := mux.Vars(r)["tripID"]
+func (h *TripHandler) GetTrip(w http.ResponseWriter, r *http.Request) {
+	tripID := mux.Vars(r)["tripID"]
 
-// 	tripData, err := h.Service.GetTrip(tripID)
-// 	if err != nil {
-// 		http.Error(w, err.Error(), http.StatusInternalServerError)
-// 		return
-// 	}
+	tripData, err := h.Service.GetTrip(tripID)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 
-// 	json.NewEncoder(w).Encode(tripData)
-// }
+	json.NewEncoder(w).Encode(tripData)
+}
 
 func (h *TripHandler) CreateTrip(w http.ResponseWriter, r *http.Request) {
 	userID, ok := r.Context().Value("userID").(string)
@@ -76,18 +78,17 @@ func (h *TripHandler) CreateTrip(w http.ResponseWriter, r *http.Request) {
 // 	json.NewEncoder(w).Encode(tripData)
 // }
 
-// func (h *TripHandler) DeleteTrip(w http.ResponseWriter, r *http.Request) {
-// 	tripID := mux.Vars(r)["tripID"]
+func (h *TripHandler) DeleteTrip(w http.ResponseWriter, r *http.Request) {
+	tripID := mux.Vars(r)["tripID"]
 
-// 	response, err := h.Service.DeleteTrip(tripID)
-// 	if err != nil {
-// 		http.Error(w, err.Error(), http.StatusInternalServerError)
-// 		return
-// 	}
+	err := h.Service.DeleteTrip(tripID)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 
-// 	w.WriteHeader(http.StatusOK)
-// 	json.NewEncoder(w).Encode(response)
-// }
+	w.WriteHeader(http.StatusOK)
+}
 
 // func (h *TripHandler) GetItineraries(w http.ResponseWriter, r *http.Request) {
 // 	tripID := mux.Vars(r)["tripID"]
