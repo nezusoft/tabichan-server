@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/tabichanorg/tabichan-server/internal/utils"
 )
 
 type TripRepository struct {
@@ -81,8 +82,8 @@ func (r *TripRepository) CreateTrip(tripData *Trip, planData *Plan) error {
 			"GSI1PK":    &types.AttributeValueMemberS{Value: fmt.Sprintf("USER#%s", tripData.CreatedBy)},
 			"GSI2PK":    &types.AttributeValueMemberS{Value: fmt.Sprintf("TRIP#%s", planData.TripID)},
 			"CreatedBy": &types.AttributeValueMemberS{Value: tripData.CreatedBy},
-			"StartDate": &types.AttributeValueMemberS{Value: tripData.StartDate.Format(time.RFC3339)},
-			"EndDate":   &types.AttributeValueMemberS{Value: tripData.EndDate.Format(time.RFC3339)},
+			"StartDate": &types.AttributeValueMemberS{Value: formatTime(tripData.StartDate)},
+			"EndDate":   &types.AttributeValueMemberS{Value: formatTime(tripData.EndDate)},
 			"Title":     &types.AttributeValueMemberS{Value: tripData.Title},
 			"ID":        &types.AttributeValueMemberS{Value: planData.TripID},
 			"Completed": &types.AttributeValueMemberBOOL{Value: tripData.Completed},
@@ -149,7 +150,6 @@ func (r *TripRepository) EditTrip(tripID string, tripData *Trip) error {
 		ExpressionAttributeNames:  attributeNames,
 	}
 
-	// Execute the update operation
 	_, err := r.Client.UpdateItem(context.TODO(), input)
 	if err != nil {
 		return fmt.Errorf("failed to update trip: %w", err)
@@ -195,6 +195,77 @@ func (r *TripRepository) CreatePlan(planID, tripID string) (*Plan, error) {
 		TripID: tripID,
 	}
 	return newPlan, err
+}
+
+func (r *TripRepository) GetItinerary(itineraryID string) (*Itinerary, error) {
+	queryInput := &dynamodb.GetItemInput{
+		TableName: aws.String("Itineraries"),
+		Key: map[string]types.AttributeValue{
+			"PK": &types.AttributeValueMemberS{Value: fmt.Sprintf("ITINERARY#%s", itineraryID)},
+			"SK": &types.AttributeValueMemberS{Value: fmt.Sprintf("META#%s", itineraryID)},
+		},
+	}
+	result, err := r.Client.GetItem(context.TODO(), queryInput)
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch itinerary with ID %s: %w", itineraryID, err)
+	}
+
+	if result.Item == nil {
+		return nil, fmt.Errorf("itinerary doesn't exist")
+	}
+
+	var itinerary Itinerary
+	err = attributevalue.UnmarshalMap(result.Item, &itinerary)
+	if err != nil {
+		return nil, fmt.Errorf("failed to unmarshal itinerary: %w", err)
+	}
+
+	return &itinerary, nil
+}
+func (r *TripRepository) DeleteItinerary(itineraryID string) error {
+	queryInput := &dynamodb.DeleteItemInput{
+		TableName: aws.String("Itineraries"),
+		Key: map[string]types.AttributeValue{
+			"PK": &types.AttributeValueMemberS{Value: fmt.Sprintf("ITINERARY#%s", itineraryID)},
+			"SK": &types.AttributeValueMemberS{Value: fmt.Sprintf("META#%s", itineraryID)},
+		},
+	}
+	_, err := r.Client.DeleteItem(context.TODO(), queryInput)
+	if err != nil {
+		return fmt.Errorf("failed to delete itinerary with ID %s: %w", itineraryID, err)
+	}
+
+	return nil
+}
+
+func (r *TripRepository) CreateItinerary(createItineraryData Itinerary) (*Itinerary, error) {
+	createItineraryData.ItineraryId = utils.GenerateID()
+	input := &dynamodb.PutItemInput{
+		TableName: aws.String("Itineraries"),
+		Item: map[string]types.AttributeValue{
+			"PK":            &types.AttributeValueMemberS{Value: fmt.Sprintf("ITINERARY#%s", createItineraryData.ItineraryId)},
+			"SK":            &types.AttributeValueMemberS{Value: fmt.Sprintf("META#%s", createItineraryData.ItineraryId)},
+			"GSI1PK":        &types.AttributeValueMemberS{Value: fmt.Sprintf("PLAN#%s", createItineraryData.PlanID)},
+			"GSI2PK":        &types.AttributeValueMemberS{Value: fmt.Sprintf("TRIP#%s", createItineraryData.TripID)},
+			"PlanID":        &types.AttributeValueMemberS{Value: createItineraryData.PlanID},
+			"TripID":        &types.AttributeValueMemberS{Value: createItineraryData.TripID},
+			"StartDate":     &types.AttributeValueMemberS{Value: formatTime(createItineraryData.StartDate)},
+			"EndDate":       &types.AttributeValueMemberS{Value: formatTime(createItineraryData.EndDate)},
+			"ItineraryName": &types.AttributeValueMemberS{Value: createItineraryData.ItineraryName},
+			"ItineraryId":   &types.AttributeValueMemberS{Value: createItineraryData.ItineraryId},
+		},
+	}
+
+	_, err := r.Client.PutItem(context.TODO(), input)
+	if err != nil {
+		return nil, err
+	}
+
+	return &createItineraryData, err
+}
+
+func formatTime(date time.Time) string {
+	return date.Format(time.RFC3339)
 }
 
 // Tables

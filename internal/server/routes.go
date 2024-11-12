@@ -33,10 +33,10 @@ func initTripRoutes(mux *mux.Router) {
 	initRoute(mux, "/trips/{tripID}", tripHandler.DeleteTrip, true, "DELETE")
 
 	// initRoute(mux, "/itineraries/{tripID}", tripHandler.GetItineraries, true, "GET")
-	// initRoute(mux, "/itineraries", tripHandler.CreateItinerary, true, "POST")
-	// initRoute(mux, "/itineraries/{itineraryID}", tripHandler.GetItinerary, true, "GET")
+	initRoute(mux, "/itineraries", tripHandler.CreateItinerary, true, "POST")
+	initRoute(mux, "/itineraries/{itineraryID}", tripHandler.GetItinerary, true, "GET")
 	// initRoute(mux, "/itineraries/{itineraryID}", tripHandler.EditItinerary, true, "PUT")
-	// initRoute(mux, "/itineraries/{itineraryID}", tripHandler.DeleteItinerary, true, "DELETE")
+	initRoute(mux, "/itineraries/{itineraryID}", tripHandler.DeleteItinerary, true, "DELETE")
 
 	// initRoute(mux, "/itineraries/{itineraryID}/items", tripHandler.GetItineraryItems, true, "GET")
 	// initRoute(mux, "/itineraries/{itineraryID}/{itineraryItemID}", tripHandler.GetItineraryItem, true, "GET")
@@ -44,7 +44,7 @@ func initTripRoutes(mux *mux.Router) {
 	// initRoute(mux, "/itineraries/{itineraryID}/{itineraryItemID}", tripHandler.EditItineraryItem, true, "PUT")
 	// initRoute(mux, "/itineraries/{itineraryID}/{itineraryItemID}", tripHandler.DeleteItineraryItem, true, "DELETE")
 
-	// initRoute(mux, "/itineraries/{planID}", tripHandler.GetPlan, true, "GET")
+	// initRoute(mux, "/itineraries/{planID}", tripHandler.GetPlan, true, "GET") // get itinerary (+items), get planitems
 	// initRoute(mux, "/itineraries/{planID}/items", tripHandler.GetPlanItems, true, "GET")
 	// initRoute(mux, "/itineraries/{planID}/{planItemID}", tripHandler.GetPlanItem, true, "GET")
 	// initRoute(mux, "/itineraries/{planID}", tripHandler.CreatePlanItem, true, "POST")

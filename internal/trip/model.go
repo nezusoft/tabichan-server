@@ -21,11 +21,12 @@ type Plan struct {
 }
 
 type Itinerary struct {
-	ItineraryName string
-	PlanID        string
-	TripID        string
-	StartDate     time.Time
-	EndDate       time.Time
+	ItineraryId   string    `json:"itineraryId"`
+	ItineraryName string    `json:"itineraryName"`
+	PlanID        string    `json:"planId"`
+	TripID        string    `json:"tripId"`
+	StartDate     time.Time `json:"startDate"`
+	EndDate       time.Time `json:"endDate"`
 }
 
 type ItineraryItem struct {
@@ -46,4 +47,9 @@ type PlanItem struct {
 	EndDate     time.Time
 	Title       string
 	Description string
+}
+
+type TimeRange struct {
+	StartDate time.Time
+	EndDate   time.Time
 }

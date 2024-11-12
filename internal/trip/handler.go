@@ -102,33 +102,33 @@ func (h *TripHandler) DeleteTrip(w http.ResponseWriter, r *http.Request) {
 // 	json.NewEncoder(w).Encode(itineraries)
 // }
 
-// func (h *TripHandler) GetItinerary(w http.ResponseWriter, r *http.Request) {
-// 	itineraryID := mux.Vars(r)["itineraryID"]
+func (h *TripHandler) GetItinerary(w http.ResponseWriter, r *http.Request) {
+	itineraryID := mux.Vars(r)["itineraryID"]
 
-// 	itinerary, err := h.Service.GetItinerary(itineraryID)
-// 	if err != nil {
-// 		http.Error(w, err.Error(), http.StatusInternalServerError)
-// 		return
-// 	}
+	itinerary, err := h.Service.GetItinerary(itineraryID)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 
-// 	json.NewEncoder(w).Encode(itinerary)
-// }
+	json.NewEncoder(w).Encode(itinerary)
+}
 
-// func (h *TripHandler) CreateItinerary(w http.ResponseWriter, r *http.Request) {
-// 	var createItineraryData Itinerary
-// 	if err := json.NewDecoder(r.Body).Decode(&createItineraryData); err != nil {
-// 		http.Error(w, "Invalid request", http.StatusBadRequest)
-// 		return
-// 	}
+func (h *TripHandler) CreateItinerary(w http.ResponseWriter, r *http.Request) {
+	var createItineraryData Itinerary
+	if err := json.NewDecoder(r.Body).Decode(&createItineraryData); err != nil {
+		http.Error(w, "Invalid request", http.StatusBadRequest)
+		return
+	}
 
-// 	itineraryData, err := h.Service.CreateItinerary(createItineraryData)
-// 	if err != nil {
-// 		http.Error(w, err.Error(), http.StatusInternalServerError)
-// 		return
-// 	}
+	itineraryData, err := h.Service.CreateItinerary(createItineraryData)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 
-// 	json.NewEncoder(w).Encode(itineraryData)
-// }
+	json.NewEncoder(w).Encode(itineraryData)
+}
 
 // func (h *TripHandler) EditItinerary(w http.ResponseWriter, r *http.Request) {
 // 	var editItineraryData Itinerary
@@ -146,18 +146,17 @@ func (h *TripHandler) DeleteTrip(w http.ResponseWriter, r *http.Request) {
 // 	json.NewEncoder(w).Encode(itineraryData)
 // }
 
-// func (h *TripHandler) DeleteItinerary(w http.ResponseWriter, r *http.Request) {
-// 	itineraryID := mux.Vars(r)["itineraryID"]
+func (h *TripHandler) DeleteItinerary(w http.ResponseWriter, r *http.Request) {
+	itineraryID := mux.Vars(r)["itineraryID"]
 
-// 	response, err := h.Service.DeleteItinerary(itineraryID)
-// 	if err != nil {
-// 		http.Error(w, err.Error(), http.StatusInternalServerError)
-// 		return
-// 	}
+	err := h.Service.DeleteItinerary(itineraryID)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 
-// 	w.WriteHeader(http.StatusOK)
-// 	json.NewEncoder(w).Encode(response)
-// }
+	w.WriteHeader(http.StatusOK)
+}
 
 // func (h *TripHandler) GetItineraryItems(w http.ResponseWriter, r *http.Request) {
 // 	itineraryID := mux.Vars(r)["itineraryID"]
