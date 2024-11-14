@@ -21,7 +21,7 @@ type Plan struct {
 }
 
 type Itinerary struct {
-	ItineraryId   string    `json:"itineraryId"`
+	ID   string    `json:"itineraryId"`
 	ItineraryName string    `json:"itineraryName"`
 	PlanID        string    `json:"planId"`
 	TripID        string    `json:"tripId"`
@@ -32,6 +32,7 @@ type Itinerary struct {
 type ItineraryItem struct {
 	TripID      string
 	ItineraryID string
+	PlanID string
 	ID          string
 	StartDate   time.Time
 	EndDate     time.Time

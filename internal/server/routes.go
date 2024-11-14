@@ -32,7 +32,7 @@ func initTripRoutes(mux *mux.Router) {
 	// initRoute(mux, "/trips/{tripID}", tripHandler.EditTrip, true, "PUT")
 	initRoute(mux, "/trips/{tripID}", tripHandler.DeleteTrip, true, "DELETE")
 
-	// initRoute(mux, "/itineraries/{tripID}", tripHandler.GetItineraries, true, "GET")
+	initRoute(mux, "/itineraries/{planID}", tripHandler.GetItineraries, true, "GET")
 	initRoute(mux, "/itineraries", tripHandler.CreateItinerary, true, "POST")
 	initRoute(mux, "/itineraries/{itineraryID}", tripHandler.GetItinerary, true, "GET")
 	// initRoute(mux, "/itineraries/{itineraryID}", tripHandler.EditItinerary, true, "PUT")
@@ -44,12 +44,12 @@ func initTripRoutes(mux *mux.Router) {
 	// initRoute(mux, "/itineraries/{itineraryID}/{itineraryItemID}", tripHandler.EditItineraryItem, true, "PUT")
 	// initRoute(mux, "/itineraries/{itineraryID}/{itineraryItemID}", tripHandler.DeleteItineraryItem, true, "DELETE")
 
-	// initRoute(mux, "/itineraries/{planID}", tripHandler.GetPlan, true, "GET") // get itinerary (+items), get planitems
-	// initRoute(mux, "/itineraries/{planID}/items", tripHandler.GetPlanItems, true, "GET")
-	// initRoute(mux, "/itineraries/{planID}/{planItemID}", tripHandler.GetPlanItem, true, "GET")
-	// initRoute(mux, "/itineraries/{planID}", tripHandler.CreatePlanItem, true, "POST")
-	// initRoute(mux, "/itineraries/{planID}/{planItemID}", tripHandler.EditPlanItem, true, "PUT")
-	// initRoute(mux, "/itineraries/{planID}/{planItemID}", tripHandler.DeletePlanItem, true, "DELETE")
+	// initRoute(mux, "/plans/{planID}", tripHandler.GetPlan, true, "GET") // get itinerary (+items), get planitems
+	// initRoute(mux, "/plans/{planID}/items", tripHandler.GetPlanItems, true, "GET")
+	// initRoute(mux, "/plans/{planID}/{planItemID}", tripHandler.GetPlanItem, true, "GET")
+	// initRoute(mux, "/plans/{planID}", tripHandler.CreatePlanItem, true, "POST")
+	// initRoute(mux, "/plans/{planID}/{planItemID}", tripHandler.EditPlanItem, true, "PUT")
+	// initRoute(mux, "/plans/{planID}/{planItemID}", tripHandler.DeletePlanItem, true, "DELETE")
 }
 
 func initUserHandler() *user.UserHandler {

@@ -70,6 +70,15 @@ func (s *TripService) CreatePlan(planID, tripID string) (*Plan, error) {
 	return plan, nil
 }
 
+func (s *TripService) GetItineraries(planId string) ([]*Itinerary, error) {
+	itineraries, err := s.Repo.GetItineraries(planId)
+	if err != nil {
+		return nil, fmt.Errorf(`error fetching itineraries for trip with plan id %s: %w`, planId, err)
+	}
+
+	return itineraries, nil
+}
+
 func (s *TripService) GetItinerary(itineraryId string) (*Itinerary, error) {
 	itinerary, err := s.Repo.GetItinerary(itineraryId)
 	if err != nil {
@@ -78,6 +87,7 @@ func (s *TripService) GetItinerary(itineraryId string) (*Itinerary, error) {
 
 	return itinerary, nil
 }
+
 func (s *TripService) DeleteItinerary(itineraryId string) error {
 	err := s.Repo.DeleteItinerary(itineraryId)
 	if err != nil {
@@ -105,6 +115,64 @@ func (s *TripService) CreateItinerary(createItineraryData Itinerary) (*Itinerary
 		return nil, err
 	}
 	return itinerary, nil
+}
+
+func (s *TripService) GetItineraryItems(itineraryId string) ([]*ItineraryItem, error) {
+	itineraryItems, err := s.Repo.GetItineraryItems(itineraryId)
+
+	if err != nil {
+		return nil, fmt.Errorf(`error fetching items for itinerary with itinerary id %s: %w`, itineraryId, err)
+
+	}
+	return itineraryItems, nil
+}
+
+func (s *TripService) CreateItineraryItem(createItineraryItemData ItineraryItem) (*ItineraryItem, error) {
+	// validate createItineraryItemData dates
+	if !createItineraryItemData.StartDate.Before(createItineraryItemData.EndDate) {
+		return nil, fmt.Errorf("start date before end date")
+	}
+	// needs to verify itinerary start/end date is still within trip start/end date
+	trip, err := s.GetTrip(createItineraryItemData.TripID)
+	if err != nil {
+		return nil, err
+	}
+	
+	// validate createItineraryItemData within trip dates
+	rangeOne := TimeRange{trip.StartDate, trip.EndDate}
+	rangeTwo := TimeRange{createItineraryItemData.StartDate, createItineraryItemData.EndDate}
+	if err := validateDatesWithinRange(rangeOne, rangeTwo); err != nil {
+		return nil, err
+	}
+
+	if len(createItineraryItemData.Title) > 15 {
+		return nil, fmt.Errorf("title must be a maximum of 15 characters long")
+	}
+
+	if len(createItineraryItemData.Description) > 100 {
+		return nil, fmt.Errorf("description must be a maximum of 100 characters long")
+	}
+
+
+	// get itinerary
+	itinerary, err := s.GetItinerary(createItineraryItemData.ItineraryID)
+	if err != nil {
+		return nil, err
+	}
+
+	// edit itinerary start and end dates
+	if createItineraryItemData.StartDate.Before(itinerary.StartDate) {
+		// edit endpoint to change itinerary data
+	}
+	if createItineraryItemData.EndDate.After(itinerary.EndDate) {
+		// edit endpoint to change itinerary data
+	}
+
+	itineraryItem, err := s.Repo.CreateItineraryItem(createItineraryItemData)
+	if err != nil {
+		return nil, err
+	}
+	return itineraryItem, nil
 }
 
 func validateTripData(tripData *Trip) error {

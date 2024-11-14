@@ -197,6 +197,37 @@ func (r *TripRepository) CreatePlan(planID, tripID string) (*Plan, error) {
 	return newPlan, err
 }
 
+func (r *TripRepository) GetItineraries(planId string) ([]*Itinerary, error) {
+	queryInput := &dynamodb.QueryInput{
+		TableName:              aws.String("Itineraries"),
+		IndexName:              aws.String("GSI1"),
+		KeyConditionExpression: aws.String("GSI1PK = :planID"),
+		ExpressionAttributeValues: map[string]types.AttributeValue{
+			":planID": &types.AttributeValueMemberS{Value: fmt.Sprintf("PLAN#%s", planId)},
+		},
+	}
+	result, err := r.Client.Query(context.TODO(), queryInput)
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch itineraries for plan with ID %s: %w", planId, err)
+	}
+
+	if len(result.Items) == 0 {
+		return nil, fmt.Errorf("couldn't find any itineraries for plan with ID: %s", planId)
+	}
+
+	var itineraries []*Itinerary
+	for _, item := range result.Items {
+		var itinerary Itinerary
+		err = attributevalue.UnmarshalMap(item, &itinerary)
+		if err != nil {
+			return nil, fmt.Errorf("failed to unmarshal itinerary: %w", err)
+		}
+		itineraries = append(itineraries, &itinerary)
+	}
+
+	return itineraries, nil
+}
+
 func (r *TripRepository) GetItinerary(itineraryID string) (*Itinerary, error) {
 	queryInput := &dynamodb.GetItemInput{
 		TableName: aws.String("Itineraries"),
@@ -222,6 +253,7 @@ func (r *TripRepository) GetItinerary(itineraryID string) (*Itinerary, error) {
 
 	return &itinerary, nil
 }
+
 func (r *TripRepository) DeleteItinerary(itineraryID string) error {
 	queryInput := &dynamodb.DeleteItemInput{
 		TableName: aws.String("Itineraries"),
@@ -239,12 +271,12 @@ func (r *TripRepository) DeleteItinerary(itineraryID string) error {
 }
 
 func (r *TripRepository) CreateItinerary(createItineraryData Itinerary) (*Itinerary, error) {
-	createItineraryData.ItineraryId = utils.GenerateID()
+	createItineraryData.ID = utils.GenerateID()
 	input := &dynamodb.PutItemInput{
 		TableName: aws.String("Itineraries"),
 		Item: map[string]types.AttributeValue{
-			"PK":            &types.AttributeValueMemberS{Value: fmt.Sprintf("ITINERARY#%s", createItineraryData.ItineraryId)},
-			"SK":            &types.AttributeValueMemberS{Value: fmt.Sprintf("META#%s", createItineraryData.ItineraryId)},
+			"PK":            &types.AttributeValueMemberS{Value: fmt.Sprintf("ITINERARY#%s", createItineraryData.ID)},
+			"SK":            &types.AttributeValueMemberS{Value: fmt.Sprintf("META#%s", createItineraryData.ID)},
 			"GSI1PK":        &types.AttributeValueMemberS{Value: fmt.Sprintf("PLAN#%s", createItineraryData.PlanID)},
 			"GSI2PK":        &types.AttributeValueMemberS{Value: fmt.Sprintf("TRIP#%s", createItineraryData.TripID)},
 			"PlanID":        &types.AttributeValueMemberS{Value: createItineraryData.PlanID},
@@ -252,7 +284,7 @@ func (r *TripRepository) CreateItinerary(createItineraryData Itinerary) (*Itiner
 			"StartDate":     &types.AttributeValueMemberS{Value: formatTime(createItineraryData.StartDate)},
 			"EndDate":       &types.AttributeValueMemberS{Value: formatTime(createItineraryData.EndDate)},
 			"ItineraryName": &types.AttributeValueMemberS{Value: createItineraryData.ItineraryName},
-			"ItineraryId":   &types.AttributeValueMemberS{Value: createItineraryData.ItineraryId},
+			"ID":   &types.AttributeValueMemberS{Value: createItineraryData.ID},
 		},
 	}
 
@@ -262,6 +294,37 @@ func (r *TripRepository) CreateItinerary(createItineraryData Itinerary) (*Itiner
 	}
 
 	return &createItineraryData, err
+}
+
+func (r *TripRepository) GetItineraryItems(itineraryId ItineraryItem) ([]*ItineraryItem, error) {
+
+}
+
+func (r *TripRepository) CreateItineraryItem(createItineraryItemData ItineraryItem) (*ItineraryItem, error) {
+	createItineraryItemData.ID = utils.GenerateID()
+	input := &dynamodb.PutItemInput{
+		TableName: aws.String("ItineraryItems"),
+		Item: map[string]types.AttributeValue{
+			"PK":            &types.AttributeValueMemberS{Value: fmt.Sprintf("ITINERARY#%s", createItineraryItemData.ItineraryID)},
+			"SK":            &types.AttributeValueMemberS{Value: fmt.Sprintf("META#%s", createItineraryItemData.ItineraryID)},
+			"GSI1PK":        &types.AttributeValueMemberS{Value: fmt.Sprintf("TRIP#%s", createItineraryItemData.TripID)},
+			"GSI2PK":        &types.AttributeValueMemberS{Value: fmt.Sprintf("ITINERARYITEM#%s", createItineraryItemData.ID)},
+			"TripID":        &types.AttributeValueMemberS{Value: createItineraryItemData.TripID},
+			"ItineraryID":   &types.AttributeValueMemberS{Value: createItineraryItemData.ItineraryID},
+			"ID":            &types.AttributeValueMemberS{Value: createItineraryItemData.ID},
+			"StartDate":     &types.AttributeValueMemberS{Value: formatTime(createItineraryItemData.StartDate)},
+			"EndDate":       &types.AttributeValueMemberS{Value: formatTime(createItineraryItemData.EndDate)},
+			"Title":         &types.AttributeValueMemberS{Value: createItineraryItemData.Title},
+			"Description":   &types.AttributeValueMemberS{Value: createItineraryItemData.Description},
+		},
+	}
+
+	_, err := r.Client.PutItem(context.TODO(), input)
+	if err != nil {
+		return nil, err
+	}
+
+	return &createItineraryItemData, err
 }
 
 func formatTime(date time.Time) string {
